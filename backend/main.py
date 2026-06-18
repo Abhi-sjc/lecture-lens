@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 # Load environmental configurations securely from your local .env file
 load_dotenv()
 
-app = FastAPI(title="Lecture Lens API", version="1.3.4")
+app = FastAPI(title="Lecture Lens API", version="1.3.5")
 
 app.add_middleware(
     CORSMiddleware,
@@ -34,6 +34,31 @@ if not GEMINI_API_KEY:
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 # =========================================================================
+# HYBRID DATABASE AUTO-DETECTION CONFIGURATION
+# =========================================================================
+
+DB_FILE = "lecturelens.db"
+USING_POSTGRES = False
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Auto-detect whether to boot up with cloud Postgres or local SQLite
+if DATABASE_URL:
+    if DATABASE_URL.startswith("postgres://"):
+        # Fix Python compatibility issue with 'postgres://' vs 'postgresql://' prefixes
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+    USING_POSTGRES = True
+
+# Standardize placeholders for SQL queries (? in SQLite, %s in Postgres)
+PARAM_MARKER = "%s" if USING_POSTGRES else "?"
+
+def get_db_connection():
+    if USING_POSTGRES:
+        import psycopg2
+        return psycopg2.connect(DATABASE_URL)
+    else:
+        return sqlite3.connect(DB_FILE)
+
+# =========================================================================
 # DATA STRUCTURAL SCHEMAS
 # =========================================================================
 
@@ -50,45 +75,64 @@ class LoginRequest(BaseModel):
     password: str
 
 # =========================================================================
-# DATABASE MATRIX & PERSISTENCE LAYER
+# DATABASE MATRIX & INITIALIZATION LAYER
 # =========================================================================
 
-DB_FILE = "lecturelens.db"
-
 def init_db():
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Core User Accounts Matrix
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL
-        )
-    """)
-    
-    # Relational History Tracking Log
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT NOT NULL,
-            title TEXT NOT NULL,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-            analysis_data TEXT NOT NULL,
-            FOREIGN KEY(username) REFERENCES users(username)
-        )
-    """)
+    if USING_POSTGRES:
+        # PostgreSQL Cloud Creation Queries
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(255) UNIQUE NOT NULL,
+                password_hash VARCHAR(255) NOT NULL
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS history (
+                id SERIAL PRIMARY KEY,
+                username VARCHAR(255) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                analysis_data TEXT NOT NULL
+            )
+        """)
+    else:
+        # SQLite Local Creation Queries
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                title TEXT NOT NULL,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                analysis_data TEXT NOT NULL,
+                FOREIGN KEY(username) REFERENCES users(username)
+            )
+        """)
     
     # Seed default system administrative node if missing
-    cursor.execute("SELECT * FROM users WHERE username = 'admin'")
+    cursor.execute(f"SELECT * FROM users WHERE username = {PARAM_MARKER}", ("admin",))
     if not cursor.fetchone():
         hashed = bcrypt.hashpw("lecturelens2026".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        cursor.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)", ("admin", hashed))
+        cursor.execute(
+            f"INSERT INTO users (username, password_hash) VALUES ({PARAM_MARKER}, {PARAM_MARKER})", 
+            ("admin", hashed)
+        )
         conn.commit()
     
     conn.close()
 
+# Start Database Engine
 init_db()
 
 def extract_video_id(url: str) -> str:
@@ -102,7 +146,12 @@ def extract_video_id(url: str) -> str:
 
 @app.get("/")
 def home():
-    return {"status": "online", "message": "Lecture Lens Secure AI Processing Engine Live!"}
+    engine_type = "PostgreSQL Cloud DB" if USING_POSTGRES else "SQLite Local DB"
+    return {
+        "status": "online", 
+        "message": "Lecture Lens Secure AI Processing Engine Live!",
+        "engine_configuration": engine_type
+    }
 
 @app.post("/api/register")
 async def register_user(credentials: LoginRequest):
@@ -110,24 +159,30 @@ async def register_user(credentials: LoginRequest):
     if len(username_clean) < 3 or len(credentials.password) < 6:
         raise HTTPException(status_code=400, detail="Credentials do not match length constraints.")
         
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     try:
         hashed = bcrypt.hashpw(credentials.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        cursor.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)", (username_clean, hashed))
+        cursor.execute(
+            f"INSERT INTO users (username, password_hash) VALUES ({PARAM_MARKER}, {PARAM_MARKER})", 
+            (username_clean, hashed)
+        )
         conn.commit()
         return {"status": "success", "message": "ACCOUNT_PROVISIONED"}
-    except sqlite3.IntegrityError:
-        raise HTTPException(status_code=400, detail="IDENTITY_CONFLICT // USERNAME_TAKEN")
+    except Exception as e:
+        err_msg = str(e).lower()
+        if "unique" in err_msg or "duplicate" in err_msg or "integrity" in err_msg:
+            raise HTTPException(status_code=400, detail="IDENTITY_CONFLICT // USERNAME_TAKEN")
+        raise HTTPException(status_code=500, detail=f"Database Write Error: {str(e)}")
     finally:
         conn.close()
 
 @app.post("/api/login")
 async def login(credentials: LoginRequest):
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT password_hash FROM users WHERE username = ?", (credentials.username.strip().lower(),))
+    cursor.execute(f"SELECT password_hash FROM users WHERE username = {PARAM_MARKER}", (credentials.username.strip().lower(),))
     record = cursor.fetchone()
     conn.close()
     
@@ -138,18 +193,26 @@ async def login(credentials: LoginRequest):
 
 @app.get("/api/history/{username}")
 async def get_user_history(username: str):
-    conn = sqlite3.connect(DB_FILE)
+    conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, title, timestamp, analysis_data FROM history WHERE username = ? ORDER BY timestamp DESC", (username.strip().lower(),))
+    cursor.execute(
+        f"SELECT id, title, timestamp, analysis_data FROM history WHERE username = {PARAM_MARKER} ORDER BY timestamp DESC", 
+        (username.strip().lower(),)
+    )
     rows = cursor.fetchall()
     conn.close()
     
     history_deck = []
     for row in rows:
+        timestamp_val = row[2]
+        # Normalize timestamps for compatibility between SQLite string formats and Postgres datetime objects
+        if not isinstance(timestamp_val, str):
+            timestamp_val = timestamp_val.strftime("%Y-%m-%d %H:%M:%S")
+            
         history_deck.append({
             "id": row[0],
             "title": row[1],
-            "timestamp": row[2],
+            "timestamp": timestamp_val,
             "analysis_data": json.loads(row[3])
         })
     return history_deck
@@ -164,11 +227,9 @@ def extract_youtube_transcript(data: YouTubeRequest):
     if not video_id:
         raise HTTPException(status_code=400, detail="Could not extract a valid YouTube Video ID.")
     try:
-        # Check if cookie bypass file was injected via Render Secret Files
         cookie_path = "cookies.txt"
         has_cookies = os.path.exists(cookie_path)
         
-        # Dual fallback mechanism coupled with cookie authentication bypass
         try:
             api_instance = YouTubeTranscriptApi()
             if has_cookies:
@@ -232,7 +293,6 @@ def analyze_lecture_text(data: AnalysisRequest):
         response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
         raw_output = response.text.strip()
         
-        # Safe markdown stripping block
         backtick_marker = chr(96) * 3
         if raw_output.startswith(backtick_marker):
             lines = raw_output.splitlines()
@@ -244,11 +304,10 @@ def analyze_lecture_text(data: AnalysisRequest):
             
         clean_json_data = json.loads(raw_output)
         
-        # Persistent memory registration log step
-        conn = sqlite3.connect(DB_FILE)
+        conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO history (username, title, analysis_data) VALUES (?, ?, ?)",
+            f"INSERT INTO history (username, title, analysis_data) VALUES ({PARAM_MARKER}, {PARAM_MARKER}, {PARAM_MARKER})",
             (data.username.strip().lower(), data.title, json.dumps(clean_json_data))
         )
         conn.commit()
@@ -264,7 +323,6 @@ def analyze_lecture_text(data: AnalysisRequest):
 # ADVANCED SYSTEM DIAGNOSTICS & TELEMETRY VIEWER (FREE SHELL ALTERNATIVE)
 # =========================================================================
 
-# Secure administration secret passkey
 ADMIN_SECRET = "lecturelens2026"
 
 @app.get("/api/admin/db-dump")
@@ -273,15 +331,13 @@ def dump_database_tables(secret: str = Query(None, description="Admin verificati
         raise HTTPException(status_code=403, detail="SECURITY_FAULT: Unauthorized telemetry request.")
         
     try:
-        conn = sqlite3.connect(DB_FILE)
+        conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Fetch accounts data
         cursor.execute("SELECT id, username, password_hash FROM users")
         users_raw = cursor.fetchall()
         users_table = [{"id": r[0], "username": r[1], "password_hash": r[2]} for r in users_raw]
         
-        # Fetch history log data
         cursor.execute("SELECT id, username, title, timestamp, analysis_data FROM history ORDER BY timestamp DESC")
         history_raw = cursor.fetchall()
         
@@ -292,17 +348,22 @@ def dump_database_tables(secret: str = Query(None, description="Admin verificati
             except Exception:
                 parsed_data = r[4]
                 
+            timestamp_val = r[3]
+            if not isinstance(timestamp_val, str):
+                timestamp_val = timestamp_val.strftime("%Y-%m-%d %H:%M:%S")
+                
             history_table.append({
                 "id": r[0],
                 "username": r[1],
                 "title": r[2],
-                "timestamp": r[3],
+                "timestamp": timestamp_val,
                 "analysis_data": parsed_data
             })
             
         conn.close()
         return {
             "status": "success",
+            "active_database": "PostgreSQL Cloud" if USING_POSTGRES else "Local SQLite File",
             "active_tables": ["users", "history"],
             "db_metrics": {
                 "total_users": len(users_table),
@@ -320,6 +381,12 @@ def dump_database_tables(secret: str = Query(None, description="Admin verificati
 def download_database_binary(secret: str = Query(None, description="Admin verification secret key")):
     if secret != ADMIN_SECRET:
         raise HTTPException(status_code=403, detail="SECURITY_FAULT: Unauthorized file request.")
+        
+    if USING_POSTGRES:
+        raise HTTPException(
+            status_code=400, 
+            detail="System is currently running on a Postgres Cloud instance. Binary file downloads are only available during local SQLite configurations. Use /api/admin/db-dump to view your cloud data."
+        )
         
     if not os.path.exists(DB_FILE):
         raise HTTPException(status_code=404, detail="Database file not initialized on disc yet.")
