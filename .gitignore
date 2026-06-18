@@ -1,0 +1,13 @@
+# Python environment ignores
+backend/venv/
+backend/.env
+backend/__pycache__/
+backend/lecturelens.db
+
+# Frontend node ignores
+frontend/node_modules/
+frontend/dist/
+
+# System files
+.DS_Store
+Thumbs.db
