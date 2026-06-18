@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Analytics } from '@vercel/analytics/react';
 import logo from './assets/logo.png';
 import bgImage from './assets/background.png';
 
@@ -131,7 +132,9 @@ export default function App() {
 
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen text-white font-sans antialiased flex items-center justify-center px-6 py-12 bg-cover bg-center bg-no-repeat bg-fixed" style={{ backgroundImage: `url(${bgImage})` }}>
+      <>
+        <Analytics />
+        <div className="min-h-screen text-white font-sans antialiased flex items-center justify-center px-6 py-12 bg-cover bg-center bg-no-repeat bg-fixed" style={{ backgroundImage: `url(${bgImage})` }}>
         <div className="w-full max-w-md bg-neutral-900/40 backdrop-blur-2xl border border-white/10 p-8 rounded-2xl shadow-2xl space-y-6">
           <div className="flex flex-col items-center text-center space-y-4">
             <div className="bg-black border border-white/10 px-4 py-2 rounded-xl shadow-md">
@@ -165,11 +168,14 @@ export default function App() {
           </div>
         </div>
       </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen text-white font-sans antialiased px-6 py-12 bg-cover bg-center bg-no-repeat bg-fixed" style={{ backgroundImage: `url(${bgImage})` }}>
+    <>
+      <Analytics />
+      <div className="min-h-screen text-white font-sans antialiased px-6 py-12 bg-cover bg-center bg-no-repeat bg-fixed" style={{ backgroundImage: `url(${bgImage})` }}>
       <div className="max-w-4xl mx-auto space-y-8">
         
         <header className="bg-neutral-900/40 backdrop-blur-xl p-6 border border-white/10 rounded-2xl flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -285,5 +291,6 @@ export default function App() {
 
       </div>
     </div>
+    </>
   );
 }
