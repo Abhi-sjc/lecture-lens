@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 # Load environmental configurations securely from your local .env file
 load_dotenv()
 
-app = FastAPI(title="Lecture Lens API", version="1.3.1")
+app = FastAPI(title="Lecture Lens API", version="1.3.2")
 
 app.add_middleware(
     CORSMiddleware,
@@ -157,7 +157,7 @@ def extract_youtube_transcript(data: YouTubeRequest):
     if not video_id:
         raise HTTPException(status_code=400, detail="Could not extract a valid YouTube Video ID.")
     try:
-        # Instantiating class structure to comply with modern fetch routines
+        # Modern fetch routine using class instantiation
         api_instance = YouTubeTranscriptApi()
         transcript_list = api_instance.fetch(video_id)
         full_text = " ".join([chunk.get('text', '') if isinstance(chunk, dict) else (getattr(chunk, 'text', '') or '') for chunk in transcript_list])
@@ -209,8 +209,32 @@ def analyze_lecture_text(data: AnalysisRequest):
     
     try:
         response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
-        
-        # High-performance sanitizer to extract raw JSON from markdown containers
         raw_output = response.text.strip()
-        if raw_output.startswith("```"):
-            raw_output = re.sub(r'^
+        
+        # Safe markdown stripping block - uses char codes to avoid regex escaping errors
+        backtick_marker = chr(96) * 3
+        if raw_output.startswith(backtick_marker):
+            lines = raw_output.splitlines()
+            if lines[0].strip().startswith(backtick_marker):
+                lines = lines[1:]
+            if lines and lines[-1].strip().endswith(backtick_marker):
+                lines = lines[:-1]
+            raw_output = "\n".join(lines).strip()
+            
+        clean_json_data = json.loads(raw_output)
+        
+        # Persistent memory registration log step
+        conn = sqlite3.connect("lecturelens.db")
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO history (username, title, analysis_data) VALUES (?, ?, ?)",
+            (data.username.strip().lower(), data.title, json.dumps(clean_json_data))
+        )
+        conn.commit()
+        conn.close()
+        
+        return clean_json_data
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=500, detail="AI response format validation failed. Please re-run execution matrices.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Core Failure: {str(e)}")
