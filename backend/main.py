@@ -3,8 +3,9 @@ import json
 import os
 import sqlite3
 import bcrypt
-from fastapi import FastAPI, UploadFile, File, HTTPException, Body
+from fastapi import FastAPI, UploadFile, File, HTTPException, Body, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from youtube_transcript_api import YouTubeTranscriptApi
 import pypdf
@@ -14,7 +15,7 @@ from dotenv import load_dotenv
 # Load environmental configurations securely from your local .env file
 load_dotenv()
 
-app = FastAPI(title="Lecture Lens API", version="1.3.2")
+app = FastAPI(title="Lecture Lens API", version="1.3.4")
 
 app.add_middleware(
     CORSMiddleware,
@@ -52,8 +53,10 @@ class LoginRequest(BaseModel):
 # DATABASE MATRIX & PERSISTENCE LAYER
 # =========================================================================
 
+DB_FILE = "lecturelens.db"
+
 def init_db():
-    conn = sqlite3.connect("lecturelens.db")
+    conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     
     # Core User Accounts Matrix
@@ -97,13 +100,17 @@ def extract_video_id(url: str) -> str:
 # SYSTEM SECURITY GATEWAYS (AUTH ENDPOINTS)
 # =========================================================================
 
+@app.get("/")
+def home():
+    return {"status": "online", "message": "Lecture Lens Secure AI Processing Engine Live!"}
+
 @app.post("/api/register")
 async def register_user(credentials: LoginRequest):
     username_clean = credentials.username.strip().lower()
     if len(username_clean) < 3 or len(credentials.password) < 6:
         raise HTTPException(status_code=400, detail="Credentials do not match length constraints.")
         
-    conn = sqlite3.connect("lecturelens.db")
+    conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     
     try:
@@ -118,7 +125,7 @@ async def register_user(credentials: LoginRequest):
 
 @app.post("/api/login")
 async def login(credentials: LoginRequest):
-    conn = sqlite3.connect("lecturelens.db")
+    conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute("SELECT password_hash FROM users WHERE username = ?", (credentials.username.strip().lower(),))
     record = cursor.fetchone()
@@ -131,7 +138,7 @@ async def login(credentials: LoginRequest):
 
 @app.get("/api/history/{username}")
 async def get_user_history(username: str):
-    conn = sqlite3.connect("lecturelens.db")
+    conn = sqlite3.connect(DB_FILE)
     cursor = conn.cursor()
     cursor.execute("SELECT id, title, timestamp, analysis_data FROM history WHERE username = ? ORDER BY timestamp DESC", (username.strip().lower(),))
     rows = cursor.fetchall()
@@ -157,9 +164,23 @@ def extract_youtube_transcript(data: YouTubeRequest):
     if not video_id:
         raise HTTPException(status_code=400, detail="Could not extract a valid YouTube Video ID.")
     try:
-        # Modern fetch routine using class instantiation
-        api_instance = YouTubeTranscriptApi()
-        transcript_list = api_instance.fetch(video_id)
+        # Check if cookie bypass file was injected via Render Secret Files
+        cookie_path = "cookies.txt"
+        has_cookies = os.path.exists(cookie_path)
+        
+        # Dual fallback mechanism coupled with cookie authentication bypass
+        try:
+            api_instance = YouTubeTranscriptApi()
+            if has_cookies:
+                transcript_list = api_instance.fetch(video_id, cookies=cookie_path)
+            else:
+                transcript_list = api_instance.fetch(video_id)
+        except (AttributeError, TypeError):
+            if has_cookies:
+                transcript_list = YouTubeTranscriptApi.get_transcript(video_id, cookies=cookie_path)
+            else:
+                transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
+            
         full_text = " ".join([chunk.get('text', '') if isinstance(chunk, dict) else (getattr(chunk, 'text', '') or '') for chunk in transcript_list])
         return {"video_id": video_id, "text_length": len(full_text), "transcript": full_text}
     except Exception as e:
@@ -211,7 +232,7 @@ def analyze_lecture_text(data: AnalysisRequest):
         response = client.models.generate_content(model='gemini-2.5-flash', contents=prompt)
         raw_output = response.text.strip()
         
-        # Safe markdown stripping block - uses char codes to avoid regex escaping errors
+        # Safe markdown stripping block
         backtick_marker = chr(96) * 3
         if raw_output.startswith(backtick_marker):
             lines = raw_output.splitlines()
@@ -224,7 +245,7 @@ def analyze_lecture_text(data: AnalysisRequest):
         clean_json_data = json.loads(raw_output)
         
         # Persistent memory registration log step
-        conn = sqlite3.connect("lecturelens.db")
+        conn = sqlite3.connect(DB_FILE)
         cursor = conn.cursor()
         cursor.execute(
             "INSERT INTO history (username, title, analysis_data) VALUES (?, ?, ?)",
@@ -238,3 +259,73 @@ def analyze_lecture_text(data: AnalysisRequest):
         raise HTTPException(status_code=500, detail="AI response format validation failed. Please re-run execution matrices.")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Core Failure: {str(e)}")
+
+# =========================================================================
+# ADVANCED SYSTEM DIAGNOSTICS & TELEMETRY VIEWER (FREE SHELL ALTERNATIVE)
+# =========================================================================
+
+# Secure administration secret passkey
+ADMIN_SECRET = "lecturelens2026"
+
+@app.get("/api/admin/db-dump")
+def dump_database_tables(secret: str = Query(None, description="Admin verification secret key")):
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="SECURITY_FAULT: Unauthorized telemetry request.")
+        
+    try:
+        conn = sqlite3.connect(DB_FILE)
+        cursor = conn.cursor()
+        
+        # Fetch accounts data
+        cursor.execute("SELECT id, username, password_hash FROM users")
+        users_raw = cursor.fetchall()
+        users_table = [{"id": r[0], "username": r[1], "password_hash": r[2]} for r in users_raw]
+        
+        # Fetch history log data
+        cursor.execute("SELECT id, username, title, timestamp, analysis_data FROM history ORDER BY timestamp DESC")
+        history_raw = cursor.fetchall()
+        
+        history_table = []
+        for r in history_raw:
+            try:
+                parsed_data = json.loads(r[4])
+            except Exception:
+                parsed_data = r[4]
+                
+            history_table.append({
+                "id": r[0],
+                "username": r[1],
+                "title": r[2],
+                "timestamp": r[3],
+                "analysis_data": parsed_data
+            })
+            
+        conn.close()
+        return {
+            "status": "success",
+            "active_tables": ["users", "history"],
+            "db_metrics": {
+                "total_users": len(users_table),
+                "total_analyses_logged": len(history_table)
+            },
+            "tables": {
+                "users": users_table,
+                "history": history_table
+            }
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database Dump Failed: {str(e)}")
+
+@app.get("/api/admin/db-download")
+def download_database_binary(secret: str = Query(None, description="Admin verification secret key")):
+    if secret != ADMIN_SECRET:
+        raise HTTPException(status_code=403, detail="SECURITY_FAULT: Unauthorized file request.")
+        
+    if not os.path.exists(DB_FILE):
+        raise HTTPException(status_code=404, detail="Database file not initialized on disc yet.")
+        
+    return FileResponse(
+        path=DB_FILE,
+        filename="lecturelens_production.db",
+        media_type="application/x-sqlite3"
+    )
