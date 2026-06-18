@@ -27,7 +27,7 @@ export default function App() {
 
   const fetchUserHistory = async () => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/history/${username.trim().lower()}`);
+      const res = await fetch(`https://lecture-lens.onrender.com/api/history/${username.trim().lower()}`);
       if (res.ok) {
         const data = await res.json();
         setHistoryDeck(data);
@@ -46,7 +46,7 @@ export default function App() {
     const endpoint = isRegistering ? 'register' : 'login';
     
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/${endpoint}`, {
+      const res = await fetch(`https://lecture-lens.onrender.com/api/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
@@ -83,7 +83,7 @@ export default function App() {
       if (inputType === 'youtube') {
         if (!youtubeUrl.trim()) throw new Error('Please supply a valid URL.');
         setLoadingStage('Extracting transcript from streaming node...');
-        const extractRes = await fetch('http://127.0.0.1:8000/api/extract/youtube', {
+        const extractRes = await fetch('https://lecture-lens.onrender.com/api/extract/youtube', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ url: youtubeUrl })
@@ -96,14 +96,14 @@ export default function App() {
         setLoadingStage('Sifting text matrices from local data file...');
         const formData = new FormData();
         formData.append('file', selectedFile);
-        const extractRes = await fetch('http://127.0.0.1:8000/api/extract/pdf', { method: 'POST', body: formData });
+        const extractRes = await fetch('https://lecture-lens.onrender.com/api/extract/pdf', { method: 'POST', body: formData });
         const data = await extractRes.json();
         if (!extractRes.ok) throw new Error(data.detail || 'Extract error');
         textToAnalyze = data.text;
       }
       
       setLoadingStage('Syncing telemetry arrays with Gemini AI...');
-      const analyzeRes = await fetch('http://127.0.0.1:8000/api/analyze', {
+      const analyzeRes = await fetch('https://lecture-lens.onrender.com/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: textToAnalyze, username, title: operationalTitle })
