@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import logo from './assets/logo.png';
 import bgImage from './assets/background.png';
 
@@ -284,6 +285,7 @@ export default function App() {
         </div>
 
       </div>
+      <SpeedInsights />
     </div>
   );
 }
