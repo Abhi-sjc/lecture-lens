@@ -37,8 +37,8 @@ export default function App() {
   // Active Flashcard interactive index state
   const [flippedCards, setFlippedCards] = useState({});
 
+  // Fix browser tab title and check pre-existing session token on boot
   useEffect(() => {
-    // Set the tab title to exactly "Lecturelens" as requested by the user
     document.title = "Lecturelens";
     
     const savedToken = localStorage.getItem("lecturelens_token");
@@ -55,7 +55,7 @@ export default function App() {
     const targetUser = userToFetch || username;
     if (!targetUser) return;
     try {
-      const response = await fetch(`${API_BASE}/api/history/${targetUser.trim().lower()}`);
+      const response = await fetch(`${API_BASE}/api/history/${targetUser.trim().toLowerCase()}`);
       if (response.ok) {
         const data = await response.json();
         setHistoryList(data);
@@ -80,10 +80,11 @@ export default function App() {
     }, 150);
   };
 
+  // Handles security authentication handshakes (Login / Register)
   const handleAuth = async (e) => {
     e.preventDefault();
     setAuthError("");
-    const cleanUsername = username.trim().lower();
+    const cleanUsername = username.trim().toLowerCase();
 
     if (!cleanUsername || !password) {
       setAuthError("Please fill in all security credential nodes.");
@@ -131,6 +132,7 @@ export default function App() {
     setHistoryList([]);
   };
 
+  // Enforces data extraction and triggers Gemini LLM generation analysis
   const handleAnalyze = async () => {
     setError("");
     setStatusMessage("");
@@ -181,7 +183,7 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text: extractedText,
-          username: username.trim().lower(),
+          username: username.trim().toLowerCase(),
           title: activeTitle,
         }),
       });
@@ -445,7 +447,6 @@ export default function App() {
           </section>
 
           {/* ================= OUTPUT PRESENTATION CONSOLE ================= */}
-          {}
           <section id="output-terminal" className="backdrop-blur-xl bg-neutral-900/40 border border-white/5 rounded-2xl p-6 shadow-2xl space-y-6">
             
             {/* Visual Outputs Switcher Menu Grid */}
@@ -623,3 +624,5 @@ export default function App() {
     </div>
   );
 }
+```
+eof
