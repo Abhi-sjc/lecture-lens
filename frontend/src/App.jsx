@@ -215,14 +215,22 @@ export default function App() {
   // =========================================================================
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen bg-neutral-950 font-mono text-neutral-200 relative flex items-center justify-center p-4 overflow-hidden">
-        {/* Absolute Underlay Graphics */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(40,40,40,0.15),transparent_70%)] pointer-events-none" />
+      <div className="min-h-screen font-mono text-neutral-200 relative flex items-center justify-center p-4 overflow-hidden">
         
-        {/* Balanced Dark Backdrop Overlay to let the background layout show through */}
-        <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] pointer-events-none" />
+        {/* 🌌 Dimmed Background Asset Layer */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0"
+          style={{ backgroundImage: "url('/background.png')" }} 
+        />
+        
+        {/* 🖤 Dimming Protection Mask Overlay */}
+        <div className="absolute inset-0 bg-neutral-950/85 pointer-events-none z-0" />
+        
+        {/* Radial Depth Light Ring */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,255,255,0.03),transparent_70%)] pointer-events-none z-0" />
 
-        <div className="relative w-full max-w-md backdrop-blur-xl bg-neutral-900/40 border border-white/10 rounded-2xl p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] transition-all duration-300">
+        {/* 💎 Frosted Glass Login Panel Card */}
+        <div className="relative z-10 w-full max-w-md backdrop-blur-xl bg-neutral-900/40 border border-white/10 rounded-2xl p-8 shadow-[0_12px_40px_0_rgba(0,0,0,0.7)] transition-all duration-300">
           <div className="flex flex-col items-center mb-8">
             <div className="w-16 h-10 bg-neutral-950/85 border border-white/10 rounded-lg flex items-center justify-center shadow-inner mb-4">
               <span className="text-white text-xs tracking-widest font-black font-mono">{"L L"}</span>
@@ -289,17 +297,24 @@ export default function App() {
   // VIEW RENDER MATRIX 2: MAIN INTEGRATED SERVICE WORKSPACE
   // =========================================================================
   return (
-    <div className="min-h-screen bg-neutral-950 font-mono text-neutral-200 relative pb-20">
+    <div className="min-h-screen font-mono text-neutral-200 relative pb-20 overflow-x-hidden">
+      
+      {/* 🌌 Fixed Background Asset Layer */}
+      <div 
+        className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0"
+        style={{ backgroundImage: "url('/background.png')" }} 
+      />
+      
+      {/* 🖤 Fixed Dimming Protection Mask Overlay */}
+      <div className="fixed inset-0 bg-neutral-950/85 pointer-events-none z-0" />
+
       {/* Decorative underlay grid */}
-      <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.015)_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.015)_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none z-0" />
 
-      {/* Balanced background dimming overlays to preserve your background artwork */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] pointer-events-none" />
-
-      <div className="max-w-4xl mx-auto px-4 pt-8 relative">
+      <div className="max-w-4xl mx-auto px-4 pt-8 relative z-10">
         
         {/* ================= HEADER CONTROL CONSOLE ================= */}
-        <header className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-2xl p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]">
+        <header className="backdrop-blur-xl bg-neutral-900/40 border border-white/10 rounded-2xl p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_12px_32px_0_rgba(0,0,0,0.6)]">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-neutral-950 border border-white/10 rounded-xl flex items-center justify-center">
               <span className="text-white text-xs tracking-widest font-black">{"LL"}</span>
@@ -314,7 +329,7 @@ export default function App() {
 
           <div className="flex items-center gap-3">
             <span className="text-[10px] text-neutral-400 border border-white/10 bg-neutral-950/80 px-3 py-1.5 rounded-md font-bold tracking-widest">
-              {"V1.3.5 [SECURE]"}
+              {"V1.3.7 [SECURE]"}
             </span>
             <button
               onClick={handleDisconnect}
@@ -328,7 +343,7 @@ export default function App() {
         {/* ================= WORKSPACE CONFIGURATION CONTAINER ================= */}
         <main className="space-y-6">
           {/* Frosted Container for Ingestion Config */}
-          <section className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-2xl p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] space-y-6">
+          <section className="backdrop-blur-xl bg-neutral-900/40 border border-white/10 rounded-2xl p-6 shadow-[0_12px_32px_0_rgba(0,0,0,0.6)] space-y-6">
             
             {/* Source Tab Toggle Switch */}
             <div className="flex gap-4 border-b border-white/10 pb-4">
@@ -445,7 +460,7 @@ export default function App() {
           </section>
 
           {/* ================= OUTPUT PRESENTATION CONSOLE ================= */}
-          <section id="output-terminal" className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-2xl p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] space-y-6">
+          <section id="output-terminal" className="backdrop-blur-xl bg-neutral-900/40 border border-white/10 rounded-2xl p-6 shadow-[0_12px_32px_0_rgba(0,0,0,0.6)] space-y-6">
             
             {/* Visual Outputs Switcher Menu Grid */}
             <div className="grid grid-cols-4 gap-2 border-b border-white/10 pb-4">
