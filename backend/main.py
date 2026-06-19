@@ -252,7 +252,7 @@ def extract_youtube_transcript(data: YouTubeRequest):
         PROXY_URL = os.getenv("PROXY_URL")
         proxies = {"http": PROXY_URL, "https": PROXY_URL} if PROXY_URL else None
         
-        # Build argument matrix dynamically based on resource availability
+        # Build clean argument configuration matrix dynamically
         fetch_args = {}
         if has_cookies:
             fetch_args["cookies"] = cookie_path
@@ -260,16 +260,13 @@ def extract_youtube_transcript(data: YouTubeRequest):
             fetch_args["proxies"] = proxies
 
         try:
-            # Primary proxy pipeline extraction attempt
+            # Primary execution block passing our safe un-packaged configuration values
             transcript_list = YouTubeTranscriptApi.get_transcript(video_id, **fetch_args)
         except Exception as proxy_err:
-            # Resilience Fallback matrix if signature formats reject args directly
-            print(f"PROXY_PIPELINE_WARN // Falling back to alternate instance configuration: {str(proxy_err)}")
-            api_instance = YouTubeTranscriptApi()
-            if has_cookies:
-                transcript_list = api_instance.fetch(video_id, cookies=cookie_path)
-            else:
-                transcript_list = api_instance.fetch(video_id)
+            # Resilient Fallback matrix: If proxy config rejects or times out, retry using cookies alone
+            print(f"PROXY_PIPELINE_WARN // Proxy handshake rejected, initializing core cookie fallback: {str(proxy_err)}")
+            fallback_args = {"cookies": cookie_path} if has_cookies else {}
+            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, **fallback_args)
             
         full_text = " ".join([chunk.get('text', '') if isinstance(chunk, dict) else (getattr(chunk, 'text', '') or '') for chunk in transcript_list])
         return {"video_id": video_id, "text_length": len(full_text), "transcript": full_text}
