@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+// 🌌 ES Module Asset Import (This tells Vite to properly compile and resolve your background image)
+import backgroundAsset from "./assets/background.png";
 
 // =========================================================================
 // API ENDPOINT AUTO-DETECTION MATRIX (Vercel Production vs. Localhost)
@@ -215,12 +217,12 @@ export default function App() {
   // =========================================================================
   if (!isLoggedIn) {
     return (
-      <div className="min-h-screen font-mono text-neutral-200 relative flex items-center justify-center p-4 overflow-hidden">
+      <div className="min-h-screen font-mono text-neutral-200 relative flex items-center justify-center p-4 overflow-hidden bg-neutral-950">
         
-        {/* 🌌 Dimmed Background Asset Layer */}
+        {/* 🌌 Compiled Module Background Layer */}
         <div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0"
-          style={{ backgroundImage: "url('/background.png')" }} 
+          style={{ backgroundImage: `url(${backgroundAsset})` }} 
         />
         
         {/* 🖤 Dimming Protection Mask Overlay */}
@@ -297,12 +299,12 @@ export default function App() {
   // VIEW RENDER MATRIX 2: MAIN INTEGRATED SERVICE WORKSPACE
   // =========================================================================
   return (
-    <div className="min-h-screen font-mono text-neutral-200 relative pb-20 overflow-x-hidden">
+    <div className="min-h-screen font-mono text-neutral-200 relative pb-20 overflow-x-hidden bg-neutral-950">
       
-      {/* 🌌 Fixed Background Asset Layer */}
+      {/* 🌌 Compiled Module Fixed Background Layer */}
       <div 
         className="fixed inset-0 bg-cover bg-center bg-no-repeat pointer-events-none z-0"
-        style={{ backgroundImage: "url('/background.png')" }} 
+        style={{ backgroundImage: `url(${backgroundAsset})` }} 
       />
       
       {/* 🖤 Fixed Dimming Protection Mask Overlay */}
