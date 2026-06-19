@@ -37,9 +37,9 @@ export default function App() {
   // Active Flashcard interactive index state
   const [flippedCards, setFlippedCards] = useState({});
 
-  // Fix browser tab title and check pre-existing session token on boot
   useEffect(() => {
-    document.title = "LectureLens // Secure Intel Workspace";
+    // Set the tab title to exactly "Lecturelens" as requested by the user
+    document.title = "Lecturelens";
     
     const savedToken = localStorage.getItem("lecturelens_token");
     const savedUser = localStorage.getItem("lecturelens_user");
@@ -80,7 +80,6 @@ export default function App() {
     }, 150);
   };
 
-  // Handles security authentication handshakes (Login / Register)
   const handleAuth = async (e) => {
     e.preventDefault();
     setAuthError("");
@@ -132,7 +131,6 @@ export default function App() {
     setHistoryList([]);
   };
 
-  // Enforces data extraction and triggers Gemini LLM generation analysis
   const handleAnalyze = async () => {
     setError("");
     setStatusMessage("");
@@ -447,6 +445,7 @@ export default function App() {
           </section>
 
           {/* ================= OUTPUT PRESENTATION CONSOLE ================= */}
+          {}
           <section id="output-terminal" className="backdrop-blur-xl bg-neutral-900/40 border border-white/5 rounded-2xl p-6 shadow-2xl space-y-6">
             
             {/* Visual Outputs Switcher Menu Grid */}

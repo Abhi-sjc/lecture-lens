@@ -15,7 +15,7 @@ from dotenv import load_dotenv
 # Load environmental configurations securely from your local .env file
 load_dotenv()
 
-app = FastAPI(title="Lecture Lens API", version="1.3.5")
+app = FastAPI(title="Lecture Lens API", version="1.3.6")
 
 app.add_middleware(
     CORSMiddleware,
@@ -82,55 +82,63 @@ def init_db():
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    if USING_POSTGRES:
-        # PostgreSQL Cloud Creation Queries
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
-                username VARCHAR(255) UNIQUE NOT NULL,
-                password_hash VARCHAR(255) NOT NULL
-            )
-        """)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS history (
-                id SERIAL PRIMARY KEY,
-                username VARCHAR(255) NOT NULL,
-                title VARCHAR(255) NOT NULL,
-                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                analysis_data TEXT NOT NULL
-            )
-        """)
-    else:
-        # SQLite Local Creation Queries
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL
-            )
-        """)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT NOT NULL,
-                title TEXT NOT NULL,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
-                analysis_data TEXT NOT NULL,
-                FOREIGN KEY(username) REFERENCES users(username)
-            )
-        """)
-    
-    # Seed default system administrative node if missing
-    cursor.execute(f"SELECT * FROM users WHERE username = {PARAM_MARKER}", ("admin",))
-    if not cursor.fetchone():
-        hashed = bcrypt.hashpw("lecturelens2026".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-        cursor.execute(
-            f"INSERT INTO users (username, password_hash) VALUES ({PARAM_MARKER}, {PARAM_MARKER})", 
-            ("admin", hashed)
-        )
+    try:
+        if USING_POSTGRES:
+            # PostgreSQL Cloud Creation Queries
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id SERIAL PRIMARY KEY,
+                    username VARCHAR(255) UNIQUE NOT NULL,
+                    password_hash VARCHAR(255) NOT NULL
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS history (
+                    id SERIAL PRIMARY KEY,
+                    username VARCHAR(255) NOT NULL,
+                    title VARCHAR(255) NOT NULL,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    analysis_data TEXT NOT NULL
+                )
+            """)
+        else:
+            # SQLite Local Creation Queries
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL
+                )
+            """)
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS history (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL,
+                    title TEXT NOT NULL,
+                    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    analysis_data TEXT NOT NULL,
+                    FOREIGN KEY(username) REFERENCES users(username)
+                )
+            """)
+        
+        # Explicitly commit table creations to prevent transaction locks in Postgres
         conn.commit()
-    
-    conn.close()
+        
+        # Seed default system administrative node if missing
+        cursor.execute(f"SELECT * FROM users WHERE username = {PARAM_MARKER}", ("admin",))
+        if not cursor.fetchone():
+            hashed = bcrypt.hashpw("lecturelens2026".encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            cursor.execute(
+                f"INSERT INTO users (username, password_hash) VALUES ({PARAM_MARKER}, {PARAM_MARKER})", 
+                ("admin", hashed)
+            )
+            conn.commit()
+            
+    except Exception as e:
+        print(f"DATABASE INITIALIZATION FAULT: {str(e)}")
+        conn.rollback()
+    finally:
+        conn.close()
 
 # Start Database Engine
 init_db()
@@ -171,6 +179,7 @@ async def register_user(credentials: LoginRequest):
         conn.commit()
         return {"status": "success", "message": "ACCOUNT_PROVISIONED"}
     except Exception as e:
+        conn.rollback()
         err_msg = str(e).lower()
         if "unique" in err_msg or "duplicate" in err_msg or "integrity" in err_msg:
             raise HTTPException(status_code=400, detail="IDENTITY_CONFLICT // USERNAME_TAKEN")
@@ -182,40 +191,48 @@ async def register_user(credentials: LoginRequest):
 async def login(credentials: LoginRequest):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute(f"SELECT password_hash FROM users WHERE username = {PARAM_MARKER}", (credentials.username.strip().lower(),))
-    record = cursor.fetchone()
-    conn.close()
-    
-    if record and bcrypt.checkpw(credentials.password.encode('utf-8'), record[0].encode('utf-8')):
-        return {"status": "success", "token": f"token_{credentials.username}"}
-            
-    raise HTTPException(status_code=401, detail="INVALID_NODE_CREDENTIALS // ACCESS_DENIED")
+    try:
+        cursor.execute(f"SELECT password_hash FROM users WHERE username = {PARAM_MARKER}", (credentials.username.strip().lower(),))
+        record = cursor.fetchone()
+        
+        if record and bcrypt.checkpw(credentials.password.encode('utf-8'), record[0].encode('utf-8')):
+            return {"status": "success", "token": f"token_{credentials.username}"}
+                
+        raise HTTPException(status_code=401, detail="INVALID_NODE_CREDENTIALS // ACCESS_DENIED")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database Read Error: {str(e)}")
+    finally:
+        conn.close()
 
 @app.get("/api/history/{username}")
 async def get_user_history(username: str):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute(
-        f"SELECT id, title, timestamp, analysis_data FROM history WHERE username = {PARAM_MARKER} ORDER BY timestamp DESC", 
-        (username.strip().lower(),)
-    )
-    rows = cursor.fetchall()
-    conn.close()
-    
-    history_deck = []
-    for row in rows:
-        timestamp_val = row[2]
-        # Normalize timestamps for compatibility between SQLite string formats and Postgres datetime objects
-        if not isinstance(timestamp_val, str):
-            timestamp_val = timestamp_val.strftime("%Y-%m-%d %H:%M:%S")
-            
-        history_deck.append({
-            "id": row[0],
-            "title": row[1],
-            "timestamp": timestamp_val,
-            "analysis_data": json.loads(row[3])
-        })
-    return history_deck
+    try:
+        cursor.execute(
+            f"SELECT id, title, timestamp, analysis_data FROM history WHERE username = {PARAM_MARKER} ORDER BY timestamp DESC", 
+            (username.strip().lower(),)
+        )
+        rows = cursor.fetchall()
+        
+        history_deck = []
+        for row in rows:
+            timestamp_val = row[2]
+            # Normalize timestamps for compatibility between SQLite string formats and Postgres datetime objects
+            if not isinstance(timestamp_val, str):
+                timestamp_val = timestamp_val.strftime("%Y-%m-%d %H:%M:%S")
+                
+            history_deck.append({
+                "id": row[0],
+                "title": row[1],
+                "timestamp": timestamp_val,
+                "analysis_data": json.loads(row[3])
+            })
+        return history_deck
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database Sync Error: {str(e)}")
+    finally:
+        conn.close()
 
 # =========================================================================
 # DATA SEPARATION & INTEL EXTRACTION ENDPOINTS
@@ -396,3 +413,8 @@ def download_database_binary(secret: str = Query(None, description="Admin verifi
         filename="lecturelens_production.db",
         media_type="application/x-sqlite3"
     )
+```
+eof
+
+---
+
