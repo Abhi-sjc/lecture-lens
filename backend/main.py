@@ -413,8 +413,3 @@ def download_database_binary(secret: str = Query(None, description="Admin verifi
         filename="lecturelens_production.db",
         media_type="application/x-sqlite3"
     )
-```
-eof
-
----
-
