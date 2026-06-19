@@ -106,7 +106,6 @@ export default function App() {
       }
 
       if (isRegistering) {
-        // Automatically pivot to login state upon successful account provisioning
         setIsRegistering(false);
         setAuthError("ACCOUNT_PROVISIONED // Proceeding to Login.");
       } else {
@@ -198,7 +197,6 @@ export default function App() {
       setFlippedCards({});
       setActiveTab("summary");
       
-      // Pull history again so our new database item shows up in the list immediately!
       fetchHistory(username);
       setStatusMessage("");
     } catch (err) {
@@ -227,15 +225,15 @@ export default function App() {
         <div className="relative w-full max-w-md backdrop-blur-2xl bg-neutral-900/60 border border-white/5 rounded-2xl p-8 shadow-2xl transition-all duration-300">
           <div className="flex flex-col items-center mb-8">
             <div className="w-16 h-10 bg-neutral-950 border border-white/10 rounded-lg flex items-center justify-center shadow-inner mb-4">
-              <span className="text-white text-xs tracking-widest font-black">L L</span>
+              <span className="text-white text-xs tracking-widest font-black font-mono">{"L L"}</span>
             </div>
-            <h1 className="text-xl tracking-[0.3em] font-black uppercase text-white">LECTURELENS</h1>
-            <p className="text-[10px] text-neutral-500 tracking-widest mt-1">AUTH_REQUIRED_FOR_NODE_ACCESS</p>
+            <h1 className="text-xl tracking-[0.3em] font-black uppercase text-white">{"LECTURELENS"}</h1>
+            <p className="text-[10px] text-neutral-500 tracking-widest mt-1">{"AUTH_REQUIRED_FOR_NODE_ACCESS"}</p>
           </div>
 
           <form onSubmit={handleAuth} className="space-y-6">
             <div>
-              <label className="block text-[10px] tracking-widest text-neutral-400 mb-2 uppercase font-semibold">USER_NODE_ID</label>
+              <label className="block text-[10px] tracking-widest text-neutral-400 mb-2 uppercase font-semibold">{"USER_NODE_ID"}</label>
               <input
                 type="text"
                 placeholder="Username..."
@@ -246,7 +244,7 @@ export default function App() {
             </div>
 
             <div>
-              <label className="block text-[10px] tracking-widest text-neutral-400 mb-2 uppercase font-semibold">ACCESS_KEYPASS</label>
+              <label className="block text-[10px] tracking-widest text-neutral-400 mb-2 uppercase font-semibold">{"ACCESS_KEYPASS"}</label>
               <input
                 type="password"
                 placeholder="Password..."
@@ -304,25 +302,25 @@ export default function App() {
         <header className="backdrop-blur-xl bg-neutral-900/45 border border-white/5 rounded-2xl p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-neutral-950 border border-white/10 rounded-xl flex items-center justify-center">
-              <span className="text-white text-xs tracking-widest font-black">LL</span>
+              <span className="text-white text-xs tracking-widest font-black">{"LL"}</span>
             </div>
             <div>
-              <h1 className="text-base tracking-[0.2em] font-black uppercase text-white">LECTURELENS</h1>
+              <h1 className="text-base tracking-[0.2em] font-black uppercase text-white">{"LECTURELENS"}</h1>
               <p className="text-[9px] text-neutral-400 tracking-widest mt-0.5">
-                ACTIVE_USER // <span className="text-white font-bold uppercase">{username}</span>
+                {"ACTIVE_USER // "} <span className="text-white font-bold uppercase">{username}</span>
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
             <span className="text-[10px] text-neutral-500 border border-white/5 bg-neutral-950/60 px-3 py-1.5 rounded-md font-bold tracking-widest">
-              V1.3.5 [SECURE]
+              {"V1.3.5 [SECURE]"}
             </span>
             <button
               onClick={handleDisconnect}
               className="border border-red-900/30 text-red-500 hover:bg-red-950/20 px-4 py-1.5 text-xs tracking-widest rounded-md uppercase transition-all duration-200"
             >
-              DISCONNECT
+              {"DISCONNECT"}
             </button>
           </div>
         </header>
@@ -341,7 +339,7 @@ export default function App() {
                 }`}
               >
                 <span className="w-2 h-2 rounded-full bg-red-500" />
-                YOUTUBE_SOURCE
+                {"YOUTUBE_SOURCE"}
               </button>
               <button
                 onClick={() => setSourceType("pdf")}
@@ -350,14 +348,14 @@ export default function App() {
                 }`}
               >
                 <span className="w-2 h-2 rounded-full bg-blue-500" />
-                DOCUMENT_PDF
+                {"DOCUMENT_PDF"}
               </button>
             </div>
 
             {/* Label / Custom Session Title Metadata Node */}
             <div>
               <label className="block text-[9px] tracking-widest text-neutral-400 mb-2 uppercase font-semibold">
-                LECTURE_TITLE (OPTIONAL)
+                {"LECTURE_TITLE (OPTIONAL)"}
               </label>
               <input
                 type="text"
@@ -372,7 +370,7 @@ export default function App() {
             {sourceType === "youtube" ? (
               <div className="backdrop-blur-2xl bg-neutral-950/50 border border-white/5 rounded-xl p-5 shadow-inner transition-all duration-300">
                 <label className="block text-[9px] tracking-widest text-neutral-400 mb-2 uppercase font-semibold">
-                  YOUTUBE VIDEO PIPELINE LINK
+                  {"YOUTUBE VIDEO PIPELINE LINK"}
                 </label>
                 <input
                   type="text"
@@ -382,13 +380,13 @@ export default function App() {
                   className="w-full bg-neutral-950/80 border border-white/10 rounded-lg py-3.5 px-4 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all"
                 />
                 <p className="text-[9px] text-neutral-500 tracking-wider mt-2">
-                  * Live extraction uses secure browser session keypass bypass matrices.
+                  {"* Live extraction uses secure browser session keypass bypass matrices."}
                 </p>
               </div>
             ) : (
               <div className="backdrop-blur-2xl bg-neutral-950/50 border border-white/5 rounded-xl p-5 shadow-inner transition-all duration-300">
                 <label className="block text-[9px] tracking-widest text-neutral-400 mb-2 uppercase font-semibold">
-                  PDF STRUCTURE BINARY LOADER
+                  {"PDF STRUCTURE BINARY LOADER"}
                 </label>
                 <div className="border border-dashed border-white/10 hover:border-white/20 bg-neutral-950/60 rounded-lg p-6 flex flex-col items-center justify-center text-center transition-all relative">
                   <input
@@ -398,7 +396,7 @@ export default function App() {
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                   <div className="w-10 h-10 bg-neutral-900 border border-white/10 rounded-lg flex items-center justify-center mb-3">
-                    <span className="text-white text-xs">PDF</span>
+                    <span className="text-white text-xs font-mono">{"PDF"}</span>
                   </div>
                   {pdfFile ? (
                     <span className="text-xs text-green-400 font-bold truncate max-w-xs uppercase">
@@ -406,11 +404,11 @@ export default function App() {
                     </span>
                   ) : (
                     <span className="text-xs text-neutral-400">
-                      DRAG & DROP OR TAP TO BROWSE FILES
+                      {"DRAG & DROP OR TAP TO BROWSE FILES"}
                     </span>
                   )}
                   <span className="text-[9px] text-neutral-600 tracking-widest mt-1">
-                    MAXIMUM BUFFER VALUE: 20MB
+                    {"MAXIMUM BUFFER VALUE: 20MB"}
                   </span>
                 </div>
               </div>
@@ -442,7 +440,7 @@ export default function App() {
                   : "bg-white text-black hover:bg-neutral-200"
               }`}
             >
-              EXECUTE_INTELLIGENCE_ANALYZE.
+              {"EXECUTE_INTELLIGENCE_ANALYZE."}
             </button>
           </section>
 
@@ -481,7 +479,7 @@ export default function App() {
                     summaryData.map((item, idx) => (
                       <div key={idx} className="bg-neutral-950/60 border border-white/5 rounded-xl p-5 shadow-sm">
                         <h4 className="text-sm font-bold text-white tracking-wide mb-2 uppercase">
-                          // {item.concept}
+                          {"// "} {item.concept}
                         </h4>
                         <p className="text-xs text-neutral-400 leading-relaxed font-sans">
                           {item.explanation}
@@ -490,7 +488,7 @@ export default function App() {
                     ))
                   ) : (
                     <div className="text-center py-16 text-neutral-600 text-xs tracking-widest uppercase font-bold">
-                      // NO_SUMMARY_TELEMETRY_FOUND_FOR_NODE
+                      {"// NO_SUMMARY_TELEMETRY_FOUND_FOR_NODE"}
                     </div>
                   )}
                 </div>
@@ -516,7 +514,7 @@ export default function App() {
                     ))
                   ) : (
                     <div className="text-center py-16 text-neutral-600 text-xs tracking-widest uppercase font-bold">
-                      // NO_JARGON_TELEMETRY_FOUND_FOR_NODE
+                      {"// NO_JARGON_TELEMETRY_FOUND_FOR_NODE"}
                     </div>
                   )}
                 </div>
@@ -538,13 +536,13 @@ export default function App() {
                           }`}
                         >
                           <div className="text-[9px] tracking-widest text-neutral-500 font-bold uppercase">
-                            QUESTION_NODE // {idx + 1}
+                            {"QUESTION_NODE // "} {idx + 1}
                           </div>
                           <p className="text-xs font-bold text-white tracking-wide text-center py-4 leading-relaxed">
                             {item.question}
                           </p>
                           <div className="text-[9px] tracking-wider text-center text-neutral-500 uppercase font-semibold">
-                            TAP TO REVEAL KEYPASS ANSWER
+                            {"TAP TO REVEAL KEYPASS ANSWER"}
                           </div>
                         </div>
 
@@ -554,20 +552,20 @@ export default function App() {
                           }`}
                         >
                           <div className="text-[9px] tracking-widest text-neutral-700 font-bold uppercase">
-                            VERIFIED_ANSWER // {idx + 1}
+                            {"VERIFIED_ANSWER // "} {idx + 1}
                           </div>
                           <p className="text-xs font-bold text-neutral-950 text-center py-4 leading-relaxed font-sans">
                             {item.answer}
                           </p>
                           <div className="text-[9px] tracking-wider text-center text-neutral-600 uppercase font-semibold">
-                            TAP TO FLIP BACK TO QUESTION
+                            {"TAP TO FLIP BACK TO QUESTION"}
                           </div>
                         </div>
                       </div>
                     ))
                   ) : (
                     <div className="col-span-2 text-center py-16 text-neutral-600 text-xs tracking-widest uppercase font-bold">
-                      // NO_FLASHCARD_TELEMETRY_FOUND_FOR_NODE
+                      {"// NO_FLASHCARD_TELEMETRY_FOUND_FOR_NODE"}
                     </div>
                   )}
                 </div>
@@ -578,13 +576,13 @@ export default function App() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center border-b border-white/5 pb-2 mb-4">
                     <span className="text-[10px] text-neutral-400 tracking-widest font-bold uppercase">
-                      SECURE DB ARCHIVE ENTRIES
+                      {"SECURE DB ARCHIVE ENTRIES"}
                     </span>
                     <button
                       onClick={() => fetchHistory()}
                       className="text-[9px] text-neutral-500 hover:text-white tracking-widest uppercase transition-all"
                     >
-                      // REFRESH_LOGS
+                      {"// REFRESH_LOGS"}
                     </button>
                   </div>
                   {historyList.length > 0 ? (
@@ -598,20 +596,20 @@ export default function App() {
                             {item.title}
                           </h4>
                           <span className="text-[9px] text-neutral-500 tracking-wider">
-                            TIMESTAMP: {item.timestamp}
+                            {"TIMESTAMP: "} {item.timestamp}
                           </span>
                         </div>
                         <button
                           onClick={() => handleRestoreArchive(item)}
                           className="bg-white text-black font-extrabold text-[9px] tracking-widest uppercase py-2 px-4 rounded-lg hover:bg-neutral-200 transition-all"
                         >
-                          RESTORE_WORKSPACE
+                          {"RESTORE_WORKSPACE"}
                         </button>
                       </div>
                     ))
                   ) : (
                     <div className="text-center py-16 text-neutral-600 text-xs tracking-widest uppercase font-bold">
-                      // NO_RECORDED_TELEMETRY_FOUND_FOR_NODE
+                      {"// NO_RECORDED_TELEMETRY_FOUND_FOR_NODE"}
                     </div>
                   )}
                 </div>
@@ -624,5 +622,3 @@ export default function App() {
     </div>
   );
 }
-```
-eof
