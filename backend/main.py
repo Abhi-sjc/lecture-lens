@@ -3,6 +3,8 @@ import json
 import os
 import sqlite3
 import bcrypt
+import requests
+import http.cookiejar
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -15,7 +17,7 @@ from dotenv import load_dotenv
 # Load environmental configurations securely from your local .env file
 load_dotenv()
 
-app = FastAPI(title="Lecture Lens API", version="1.3.6")
+app = FastAPI(title="Lecture Lens API", version="1.3.7")
 
 app.add_middleware(
     CORSMiddleware,
@@ -247,26 +249,26 @@ def extract_youtube_transcript(data: YouTubeRequest):
     try:
         cookie_path = "cookies.txt"
         has_cookies = os.path.exists(cookie_path)
-        
-        # Pull anti-blocking residential proxy system string out of environment profiles
         PROXY_URL = os.getenv("PROXY_URL")
-        proxies = {"http": PROXY_URL, "https": PROXY_URL} if PROXY_URL else None
         
-        # Build clean argument configuration matrix dynamically
-        fetch_args = {}
+        # Initialize an explicit request network session agent to hook into the new object model
+        session = requests.Session()
+        
+        # Safely inject your Netscape format cookie entries into the request manager context
         if has_cookies:
-            fetch_args["cookies"] = cookie_path
-        if proxies:
-            fetch_args["proxies"] = proxies
-
-        try:
-            # Primary execution block passing our safe un-packaged configuration values
-            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, **fetch_args)
-        except Exception as proxy_err:
-            # Resilient Fallback matrix: If proxy config rejects or times out, retry using cookies alone
-            print(f"PROXY_PIPELINE_WARN // Proxy handshake rejected, initializing core cookie fallback: {str(proxy_err)}")
-            fallback_args = {"cookies": cookie_path} if has_cookies else {}
-            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, **fallback_args)
+            try:
+                cj = http.cookiejar.MozillaCookieJar(cookie_path)
+                cj.load(ignore_discard=True, ignore_expires=True)
+                session.cookies.update(cj)
+            except Exception as cookie_err:
+                print(f"COOKIE_LOAD_WARN // Matrix processing error: {str(cookie_err)}")
+                
+        if PROXY_URL:
+            session.proxies = {"http": PROXY_URL, "https": PROXY_URL}
+            
+        # Instantiate the verified client connection following the class update patterns
+        api_instance = YouTubeTranscriptApi(http_client=session)
+        transcript_list = api_instance.fetch(video_id)
             
         full_text = " ".join([chunk.get('text', '') if isinstance(chunk, dict) else (getattr(chunk, 'text', '') or '') for chunk in transcript_list])
         return {"video_id": video_id, "text_length": len(full_text), "transcript": full_text}
