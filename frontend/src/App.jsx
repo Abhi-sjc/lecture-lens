@@ -136,7 +136,7 @@ export default function App() {
     setError("");
     setStatusMessage("");
 
-    // Enforce robust validation rules
+    // Enforce robust validation checks
     if (sourceType === "youtube" && !youtubeUrl.trim()) {
       setError("VALIDATION EXCEPTION: YouTube Media Link node is empty.");
       return;
@@ -219,12 +219,12 @@ export default function App() {
         {/* Absolute Underlay Graphics */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(40,40,40,0.15),transparent_70%)] pointer-events-none" />
         
-        {/* Dynamic Dark Backdrop Overlay to aggressively dim the background waveform */}
-        <div className="absolute inset-0 bg-black/75 backdrop-blur-[3px] pointer-events-none" />
+        {/* Balanced Dark Backdrop Overlay to let the background layout show through */}
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] pointer-events-none" />
 
-        <div className="relative w-full max-w-md backdrop-blur-2xl bg-neutral-900/60 border border-white/5 rounded-2xl p-8 shadow-2xl transition-all duration-300">
+        <div className="relative w-full max-w-md backdrop-blur-xl bg-neutral-900/40 border border-white/10 rounded-2xl p-8 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] transition-all duration-300">
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-10 bg-neutral-950 border border-white/10 rounded-lg flex items-center justify-center shadow-inner mb-4">
+            <div className="w-16 h-10 bg-neutral-950/85 border border-white/10 rounded-lg flex items-center justify-center shadow-inner mb-4">
               <span className="text-white text-xs tracking-widest font-black font-mono">{"L L"}</span>
             </div>
             <h1 className="text-xl tracking-[0.3em] font-black uppercase text-white">{"LECTURELENS"}</h1>
@@ -239,7 +239,7 @@ export default function App() {
                 placeholder="Username..."
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-neutral-950/80 border border-white/10 rounded-lg py-3 px-4 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all font-mono"
+                className="w-full bg-neutral-950/70 border border-white/10 rounded-lg py-3 px-4 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all font-mono"
               />
             </div>
 
@@ -250,7 +250,7 @@ export default function App() {
                 placeholder="Password..."
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-neutral-950/80 border border-white/10 rounded-lg py-3 px-4 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all font-mono"
+                className="w-full bg-neutral-950/70 border border-white/10 rounded-lg py-3 px-4 text-sm text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all font-mono"
               />
             </div>
 
@@ -293,13 +293,13 @@ export default function App() {
       {/* Decorative underlay grid */}
       <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.015)_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
 
-      {/* Radial Dark Vignette to dim the wallpaper graphics and ensure incredible text legibility */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/75 to-neutral-950 pointer-events-none" />
+      {/* Balanced background dimming overlays to preserve your background artwork */}
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-[1px] pointer-events-none" />
 
       <div className="max-w-4xl mx-auto px-4 pt-8 relative">
         
         {/* ================= HEADER CONTROL CONSOLE ================= */}
-        <header className="backdrop-blur-xl bg-neutral-900/45 border border-white/5 rounded-2xl p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+        <header className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-2xl p-6 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)]">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-neutral-950 border border-white/10 rounded-xl flex items-center justify-center">
               <span className="text-white text-xs tracking-widest font-black">{"LL"}</span>
@@ -313,7 +313,7 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="text-[10px] text-neutral-500 border border-white/5 bg-neutral-950/60 px-3 py-1.5 rounded-md font-bold tracking-widest">
+            <span className="text-[10px] text-neutral-400 border border-white/10 bg-neutral-950/80 px-3 py-1.5 rounded-md font-bold tracking-widest">
               {"V1.3.5 [SECURE]"}
             </span>
             <button
@@ -328,10 +328,10 @@ export default function App() {
         {/* ================= WORKSPACE CONFIGURATION CONTAINER ================= */}
         <main className="space-y-6">
           {/* Frosted Container for Ingestion Config */}
-          <section className="backdrop-blur-xl bg-neutral-900/40 border border-white/5 rounded-2xl p-6 shadow-2xl space-y-6">
+          <section className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-2xl p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] space-y-6">
             
             {/* Source Tab Toggle Switch */}
-            <div className="flex gap-4 border-b border-white/5 pb-4">
+            <div className="flex gap-4 border-b border-white/10 pb-4">
               <button
                 onClick={() => setSourceType("youtube")}
                 className={`flex items-center gap-2 pb-2 text-xs font-bold tracking-widest uppercase transition-all ${
@@ -362,13 +362,13 @@ export default function App() {
                 placeholder="Label this analysis asset..."
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full bg-neutral-950/60 border border-white/5 rounded-xl py-3 px-4 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-white/25 transition-all"
+                className="w-full bg-neutral-950/60 border border-white/10 rounded-xl py-3 px-4 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-white/25 transition-all"
               />
             </div>
 
             {/* Dynamic Content Blocks inside highly stylized nested frosted compartments */}
             {sourceType === "youtube" ? (
-              <div className="backdrop-blur-2xl bg-neutral-950/50 border border-white/5 rounded-xl p-5 shadow-inner transition-all duration-300">
+              <div className="backdrop-blur-xl bg-neutral-950/60 border border-white/10 rounded-xl p-5 shadow-inner transition-all duration-300">
                 <label className="block text-[9px] tracking-widest text-neutral-400 mb-2 uppercase font-semibold">
                   {"YOUTUBE VIDEO PIPELINE LINK"}
                 </label>
@@ -377,25 +377,25 @@ export default function App() {
                   placeholder="Paste video url link here..."
                   value={youtubeUrl}
                   onChange={(e) => setYoutubeUrl(e.target.value)}
-                  className="w-full bg-neutral-950/80 border border-white/10 rounded-lg py-3.5 px-4 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all"
+                  className="w-full bg-neutral-950/80 border border-white/15 rounded-lg py-3.5 px-4 text-xs text-white placeholder-neutral-600 focus:outline-none focus:border-white/30 transition-all"
                 />
                 <p className="text-[9px] text-neutral-500 tracking-wider mt-2">
                   {"* Live extraction uses secure browser session keypass bypass matrices."}
                 </p>
               </div>
             ) : (
-              <div className="backdrop-blur-2xl bg-neutral-950/50 border border-white/5 rounded-xl p-5 shadow-inner transition-all duration-300">
+              <div className="backdrop-blur-xl bg-neutral-950/60 border border-white/10 rounded-xl p-5 shadow-inner transition-all duration-300">
                 <label className="block text-[9px] tracking-widest text-neutral-400 mb-2 uppercase font-semibold">
                   {"PDF STRUCTURE BINARY LOADER"}
                 </label>
-                <div className="border border-dashed border-white/10 hover:border-white/20 bg-neutral-950/60 rounded-lg p-6 flex flex-col items-center justify-center text-center transition-all relative">
+                <div className="border border-dashed border-white/15 hover:border-white/30 bg-neutral-950/60 rounded-lg p-6 flex flex-col items-center justify-center text-center transition-all relative">
                   <input
                     type="file"
                     accept=".pdf"
                     onChange={(e) => setPdfFile(e.target.files[0])}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
-                  <div className="w-10 h-10 bg-neutral-900 border border-white/10 rounded-lg flex items-center justify-center mb-3">
+                  <div className="w-10 h-10 bg-neutral-900 border border-white/15 rounded-lg flex items-center justify-center mb-3">
                     <span className="text-white text-xs font-mono">{"PDF"}</span>
                   </div>
                   {pdfFile ? (
@@ -403,11 +403,11 @@ export default function App() {
                       {pdfFile.name}
                     </span>
                   ) : (
-                    <span className="text-xs text-neutral-400">
+                    <span className="text-xs text-neutral-400 font-medium">
                       {"DRAG & DROP OR TAP TO BROWSE FILES"}
                     </span>
                   )}
-                  <span className="text-[9px] text-neutral-600 tracking-widest mt-1">
+                  <span className="text-[9px] text-neutral-600 tracking-widest mt-1 font-semibold">
                     {"MAXIMUM BUFFER VALUE: 20MB"}
                   </span>
                 </div>
@@ -416,7 +416,7 @@ export default function App() {
 
             {/* Telemetry processing indicators */}
             {loading && (
-              <div className="bg-neutral-950 border border-white/5 rounded-xl p-4 flex items-center gap-4">
+              <div className="bg-neutral-950/80 border border-white/10 rounded-xl p-4 flex items-center gap-4">
                 <div className="w-4 h-4 border-2 border-white/35 border-t-white rounded-full animate-spin" />
                 <span className="text-[10px] tracking-widest text-neutral-400 uppercase font-semibold animate-pulse">
                   {statusMessage}
@@ -425,7 +425,7 @@ export default function App() {
             )}
 
             {error && (
-              <div className="bg-red-950/30 border border-red-900/30 text-red-400 text-xs py-3.5 px-4 rounded-xl text-center tracking-wide leading-relaxed font-semibold">
+              <div className="bg-red-950/30 border border-red-900/40 text-red-400 text-xs py-3.5 px-4 rounded-xl text-center tracking-wide leading-relaxed font-semibold">
                 {error}
               </div>
             )}
@@ -436,7 +436,7 @@ export default function App() {
               disabled={loading}
               className={`w-full font-bold text-xs tracking-widest uppercase py-4 rounded-xl transition-all shadow-lg active:scale-[0.98] ${
                 loading
-                  ? "bg-neutral-800 text-neutral-600 cursor-not-allowed"
+                  ? "bg-neutral-800 text-neutral-600 cursor-not-allowed border border-white/5"
                   : "bg-white text-black hover:bg-neutral-200"
               }`}
             >
@@ -445,10 +445,10 @@ export default function App() {
           </section>
 
           {/* ================= OUTPUT PRESENTATION CONSOLE ================= */}
-          <section id="output-terminal" className="backdrop-blur-xl bg-neutral-900/40 border border-white/5 rounded-2xl p-6 shadow-2xl space-y-6">
+          <section id="output-terminal" className="backdrop-blur-xl bg-white/[0.03] border border-white/10 rounded-2xl p-6 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] space-y-6">
             
             {/* Visual Outputs Switcher Menu Grid */}
-            <div className="grid grid-cols-4 gap-2 border-b border-white/5 pb-4">
+            <div className="grid grid-cols-4 gap-2 border-b border-white/10 pb-4">
               {[
                 { id: "summary", label: "SUMMARY" },
                 { id: "jargon", label: "JARGON" },
@@ -461,7 +461,7 @@ export default function App() {
                   className={`py-2 text-[10px] font-bold tracking-widest uppercase transition-all text-center rounded-lg ${
                     activeTab === tab.id
                       ? "bg-white text-black font-extrabold"
-                      : "text-neutral-400 hover:text-white hover:bg-neutral-950/40"
+                      : "text-neutral-400 hover:text-white hover:bg-neutral-950/60"
                   }`}
                 >
                   {tab.label}
@@ -477,7 +477,7 @@ export default function App() {
                 <div className="space-y-4">
                   {summaryData.length > 0 ? (
                     summaryData.map((item, idx) => (
-                      <div key={idx} className="bg-neutral-950/60 border border-white/5 rounded-xl p-5 shadow-sm">
+                      <div key={idx} className="backdrop-blur-xl bg-neutral-950/50 border border-white/10 rounded-xl p-5 shadow-sm">
                         <h4 className="text-sm font-bold text-white tracking-wide mb-2 uppercase">
                           {"// "} {item.concept}
                         </h4>
@@ -499,7 +499,7 @@ export default function App() {
                 <div className="space-y-4">
                   {jargonData.length > 0 ? (
                     jargonData.map((item, idx) => (
-                      <div key={idx} className="bg-neutral-950/60 border border-white/5 rounded-xl p-5 shadow-sm flex flex-col md:flex-row md:items-start gap-4">
+                      <div key={idx} className="backdrop-blur-xl bg-neutral-950/50 border border-white/10 rounded-xl p-5 shadow-sm flex flex-col md:flex-row md:items-start gap-4">
                         <div className="md:w-1/3">
                           <span className="text-xs font-bold text-white tracking-wider uppercase border-l-2 border-white pl-2">
                             {item.term}
@@ -531,7 +531,7 @@ export default function App() {
                         className="cursor-pointer min-h-[160px] relative transition-transform duration-500 transform-style-3d group"
                       >
                         <div
-                          className={`absolute inset-0 bg-neutral-950/60 border border-white/5 rounded-xl p-5 flex flex-col justify-between transition-all duration-500 backface-hidden ${
+                          className={`absolute inset-0 bg-neutral-950/75 border border-white/10 rounded-xl p-5 flex flex-col justify-between transition-all duration-500 backface-hidden ${
                             flippedCards[idx] ? "opacity-0 pointer-events-none scale-95" : "opacity-100 scale-100"
                           }`}
                         >
@@ -574,7 +574,7 @@ export default function App() {
               {/* Tab: Real-Time Persistent SQL History Archives */}
               {activeTab === "history" && (
                 <div className="space-y-4">
-                  <div className="flex justify-between items-center border-b border-white/5 pb-2 mb-4">
+                  <div className="flex justify-between items-center border-b border-white/10 pb-2 mb-4">
                     <span className="text-[10px] text-neutral-400 tracking-widest font-bold uppercase">
                       {"SECURE DB ARCHIVE ENTRIES"}
                     </span>
@@ -589,7 +589,7 @@ export default function App() {
                     historyList.map((item, idx) => (
                       <div
                         key={idx}
-                        className="bg-neutral-950/60 border border-white/5 hover:border-white/15 rounded-xl p-5 flex items-center justify-between gap-4 transition-all"
+                        className="backdrop-blur-xl bg-neutral-950/60 border border-white/10 hover:border-white/20 rounded-xl p-5 flex items-center justify-between gap-4 transition-all"
                       >
                         <div className="truncate max-w-lg">
                           <h4 className="text-xs font-extrabold text-white tracking-wide truncate uppercase">
