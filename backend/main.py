@@ -243,26 +243,38 @@ def extract_youtube_transcript(data: YouTubeRequest):
     video_id = extract_video_id(data.url)
     if not video_id:
         raise HTTPException(status_code=400, detail="Could not extract a valid YouTube Video ID.")
+        
     try:
         cookie_path = "cookies.txt"
         has_cookies = os.path.exists(cookie_path)
         
+        # Pull anti-blocking residential proxy system string out of environment profiles
+        PROXY_URL = os.getenv("PROXY_URL")
+        proxies = {"http": PROXY_URL, "https": PROXY_URL} if PROXY_URL else None
+        
+        # Build argument matrix dynamically based on resource availability
+        fetch_args = {}
+        if has_cookies:
+            fetch_args["cookies"] = cookie_path
+        if proxies:
+            fetch_args["proxies"] = proxies
+
         try:
+            # Primary proxy pipeline extraction attempt
+            transcript_list = YouTubeTranscriptApi.get_transcript(video_id, **fetch_args)
+        except Exception as proxy_err:
+            # Resilience Fallback matrix if signature formats reject args directly
+            print(f"PROXY_PIPELINE_WARN // Falling back to alternate instance configuration: {str(proxy_err)}")
             api_instance = YouTubeTranscriptApi()
             if has_cookies:
                 transcript_list = api_instance.fetch(video_id, cookies=cookie_path)
             else:
                 transcript_list = api_instance.fetch(video_id)
-        except (AttributeError, TypeError):
-            if has_cookies:
-                transcript_list = YouTubeTranscriptApi.get_transcript(video_id, cookies=cookie_path)
-            else:
-                transcript_list = YouTubeTranscriptApi.get_transcript(video_id)
             
         full_text = " ".join([chunk.get('text', '') if isinstance(chunk, dict) else (getattr(chunk, 'text', '') or '') for chunk in transcript_list])
         return {"video_id": video_id, "text_length": len(full_text), "transcript": full_text}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Engine error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Ingestion Engine Exception: {str(e)}")
 
 @app.post("/api/extract/pdf")
 async def extract_pdf_text(file: UploadFile = File(...)):
