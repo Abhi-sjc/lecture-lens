@@ -4,12 +4,10 @@ import os
 import sqlite3
 import bcrypt
 import requests
-import http.cookiejar
 from fastapi import FastAPI, UploadFile, File, HTTPException, Body, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from youtube_transcript_api import YouTubeTranscriptApi
 import pypdf
 from google import genai
 from dotenv import load_dotenv
@@ -237,7 +235,7 @@ async def get_user_history(username: str):
         conn.close()
 
 # =========================================================================
-# DATA SEPARATION & INTEL EXTRACTION ENDPOINTS
+# DATA SEPARATION & INTEL EXTRACTION ENDPOINTS (RAPIDAPI SECURE TRACK)
 # =========================================================================
 
 @app.post("/api/extract/youtube")
@@ -246,34 +244,63 @@ def extract_youtube_transcript(data: YouTubeRequest):
     if not video_id:
         raise HTTPException(status_code=400, detail="Could not extract a valid YouTube Video ID.")
         
+    # Retrieve your universal RapidAPI security credential token from environment profiles
+    RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
+    if not RAPIDAPI_KEY:
+        raise HTTPException(
+            status_code=500, 
+            detail="SYSTEM CONFIGURATION FAULT: 'RAPIDAPI_KEY' variable is missing from your Render environment parameters."
+        )
+        
+    # Target API endpoint matching your exact youtube-transcript3 subscription layout
+    url = "https://youtube-transcript3.p.rapidapi.com/api/transcript"
+    headers = {
+        "x-rapidapi-key": RAPIDAPI_KEY,
+        "x-rapidapi-host": "youtube-transcript3.p.rapidapi.com"
+    }
+    querystring = {"videoId": video_id}
+    
     try:
-        cookie_path = "cookies.txt"
-        has_cookies = os.path.exists(cookie_path)
-        PROXY_URL = os.getenv("PROXY_URL")
+        # Secure serverless gateway handshake bypassing proxy restrictions natively
+        response = requests.get(url, headers=headers, params=querystring)
         
-        # Initialize an explicit request network session agent to hook into the new object model
-        session = requests.Session()
+        if response.status_code != 200:
+            raise Exception(f"RapidAPI Server rejected request with status code: {response.status_code}")
+            
+        res_data = response.json()
         
-        # Safely inject your Netscape format cookie entries into the request manager context
-        if has_cookies:
-            try:
-                cj = http.cookiejar.MozillaCookieJar(cookie_path)
-                cj.load(ignore_discard=True, ignore_expires=True)
-                session.cookies.update(cj)
-            except Exception as cookie_err:
-                print(f"COOKIE_LOAD_WARN // Matrix processing error: {str(cookie_err)}")
-                
-        if PROXY_URL:
-            session.proxies = {"http": PROXY_URL, "https": PROXY_URL}
+        # Adaptive response layout parsing to build uniform text context strings
+        segments = []
+        if isinstance(res_data, dict):
+            if "transcript" in res_data:
+                segments = res_data["transcript"]
+            elif "body" in res_data:
+                segments = res_data["body"]
+        elif isinstance(res_data, list):
+            segments = res_data
             
-        # Instantiate the verified client connection following the class update patterns
-        api_instance = YouTubeTranscriptApi(http_client=session)
-        transcript_list = api_instance.fetch(video_id)
+        # Compile individual time-stamped text dictionaries into single raw text blocks
+        if isinstance(segments, list):
+            full_text = " ".join([chunk.get('text', '') for chunk in segments if isinstance(chunk, dict)])
+        elif isinstance(segments, str):
+            full_text = segments
+        else:
+            raise Exception("UNEXPECTED_JSON_PAYLOAD // Could not map transcript structure variables.")
             
-        full_text = " ".join([chunk.get('text', '') if isinstance(chunk, dict) else (getattr(chunk, 'text', '') or '') for chunk in transcript_list])
-        return {"video_id": video_id, "text_length": len(full_text), "transcript": full_text}
+        if not full_text or len(full_text.strip()) < 10:
+            raise Exception("PARSE_EMPTY // No legible voice streams captured from target media node.")
+            
+        return {
+            "video_id": video_id,
+            "text_length": len(full_text),
+            "transcript": full_text
+        }
+        
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Ingestion Engine Exception: {str(e)}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Managed Extraction Gateway Failure: {str(e)}"
+        )
 
 @app.post("/api/extract/pdf")
 async def extract_pdf_text(file: UploadFile = File(...)):
